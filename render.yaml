@@ -1,0 +1,33 @@
+# Blueprint de Render: crea los DOS servicios (Render 1 y Render 2)
+# https://render.com -> New -> Blueprint -> apuntar a este repositorio
+services:
+  - type: web
+    name: techstore-api-1
+    runtime: python
+    rootDir: api-rest
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: INSTANCE_NAME
+        value: RENDER-1
+      - key: DATABASE_URL
+        sync: false
+      - key: FIREBASE_CREDENTIALS_JSON
+        sync: false
+      - key: SOAP_URL
+        sync: false
+  - type: web
+    name: techstore-api-2
+    runtime: python
+    rootDir: api-rest
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: INSTANCE_NAME
+        value: RENDER-2
+      - key: DATABASE_URL
+        sync: false
+      - key: FIREBASE_CREDENTIALS_JSON
+        sync: false
+      - key: SOAP_URL
+        sync: false
