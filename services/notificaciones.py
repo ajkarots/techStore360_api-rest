@@ -5,19 +5,21 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
 def enviar_alerta_sms(mensaje: str):
-    sid = os.getenv("TWILIO_ACCOUNT_SID")
+    sid   = os.getenv("TWILIO_ACCOUNT_SID")
     token = os.getenv("TWILIO_AUTH_TOKEN")
     if not sid or not token:
         print("[Twilio] No configurado, se omite SMS")
         return
-    from twilio.rest import Client
-    client = Client(sid, token)
-    client.messages.create(
-        body=mensaje,
-        from_=os.getenv("TWILIO_FROM"),
-        to=os.getenv("TWILIO_ADMIN_PHONE"),
-    )
-    print("[Twilio] Alerta enviada")
+    try:
+        from twilio.rest import Client
+        Client(sid, token).messages.create(
+            body=mensaje,
+            from_=os.getenv("TWILIO_FROM"),
+            to=os.getenv("TWILIO_ADMIN_PHONE"),
+        )
+        print("[Twilio] Alerta enviada")
+    except Exception as e:
+        print(f"[Twilio] Error enviando SMS: {e}")
 
 def enviar_factura_email(usuario, compra, xml_factura: str | None):
     host = os.getenv("SMTP_HOST")

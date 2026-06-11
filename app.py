@@ -12,9 +12,18 @@ from routes.compras import compras_bp
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    CORS(app)  # permite consumo desde React, Flutter web y portales
+    CORS(app, resources={r"/*": {"origins": "*"}},
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
     db.init_app(app)
     init_firebase()
+
+    @app.after_request
+    def agregar_cors(response):
+        response.headers["Access-Control-Allow-Origin"]  = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        return response
 
     app.register_blueprint(usuarios_bp)
     app.register_blueprint(productos_bp)
