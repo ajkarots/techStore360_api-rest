@@ -53,6 +53,7 @@ class Compra(db.Model):
     total = db.Column(db.Numeric(10, 2), nullable=False)
     estado = db.Column(db.String(20), default="PENDIENTE")
     clave_acceso = db.Column(db.String(60))
+    xml_content = db.Column(db.Text)
     creado_en = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
 
     def to_dict(self):
@@ -61,5 +62,6 @@ class Compra(db.Model):
             "subtotal": float(self.subtotal), "iva": float(self.iva),
             "total": float(self.total), "estado": self.estado,
             "clave_acceso": self.clave_acceso,
+            "xml_content": self.xml_content,
             "creado_en": self.creado_en.isoformat() if self.creado_en else None,
         }

@@ -66,6 +66,7 @@ def _enviar_n8n(usuario, compra):
                 "items":        compra.items,
                 "estado":       compra.estado,
                 "clave_acceso": compra.clave_acceso,
+                "xml":          compra.xml_content or "",
             },
             timeout=10,
         )

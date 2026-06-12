@@ -1,5 +1,5 @@
 from decimal import Decimal
-from flask import Blueprint, request, jsonify, g, current_app
+from flask import Blueprint, request, jsonify, g, current_app, Response
 from models import db, Usuario, Producto, Compra
 from auth import token_required, admin_required
 from services.soap_client import generar_factura_soap
@@ -54,6 +54,7 @@ def crear():
         if soap:
             compra.estado = soap.get("estado", "PENDIENTE")
             compra.clave_acceso = soap.get("clave_acceso")
+            compra.xml_content = soap.get("xml")
             db.session.commit()
 
         # 3) Notificaciones (no bloquean la compra si fallan)
@@ -87,3 +88,20 @@ def mis_compras():
 def todas():
     compras = Compra.query.order_by(Compra.creado_en.desc()).all()
     return jsonify([c.to_dict() for c in compras])
+
+@compras_bp.get("/<int:id>/xml")
+@token_required
+def descargar_xml(id):
+    compra = Compra.query.get(id)
+    if not compra:
+        return jsonify({"error": "Compra no encontrada"}), 404
+    usuario = Usuario.query.filter_by(firebase_uid=g.firebase_uid).first()
+    if not usuario or (compra.usuario_id != usuario.id and usuario.rol != "admin"):
+        return jsonify({"error": "Sin permiso"}), 403
+    if not compra.xml_content:
+        return jsonify({"error": "XML no disponible para esta compra"}), 404
+    return Response(
+        compra.xml_content,
+        mimetype="application/xml",
+        headers={"Content-Disposition": f"attachment; filename=factura_{id}.xml"},
+    )
