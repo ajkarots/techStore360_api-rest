@@ -1,5 +1,6 @@
 from decimal import Decimal
 from flask import Blueprint, request, jsonify, g, current_app, Response
+from sqlalchemy import select
 from models import db, Usuario, Producto, Compra
 from auth import token_required, admin_required
 from services.soap_client import generar_factura_soap
@@ -27,8 +28,16 @@ def crear():
 
     try:
         items, subtotal = [], Decimal("0")
-        for it in items_req:
-            p = Producto.query.get(it["producto_id"])
+        # Ordenar por ID evita deadlocks cuando dos transacciones bloquean los mismos productos
+        items_req_sorted = sorted(items_req, key=lambda x: x["producto_id"])
+        for it in items_req_sorted:
+            # WITH_FOR_UPDATE bloquea la fila: el segundo usuario espera hasta que
+            # el primero haga commit, luego lee el stock ya actualizado
+            p = db.session.execute(
+                select(Producto)
+                .where(Producto.id == it["producto_id"])
+                .with_for_update()
+            ).scalar_one_or_none()
             cantidad = int(it.get("cantidad", 1))
             if not p or not p.activo:
                 return jsonify({"error": f"Producto {it['producto_id']} no existe"}), 400

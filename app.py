@@ -53,7 +53,18 @@ def create_app():
 
     @app.get("/health")
     def health():
-        return jsonify({"status": "ok", "instancia": app.config["INSTANCE_NAME"]})
+        from sqlalchemy import text
+        db_ok = True
+        try:
+            db.session.execute(text("SELECT 1"))
+        except Exception:
+            db_ok = False
+        return jsonify({
+            "status": "ok" if db_ok else "degradado",
+            "instancia": app.config["INSTANCE_NAME"],
+            "db_activa": app.config.get("DB_ACTIVA", "SUPABASE"),
+            "db_ok": db_ok,
+        })
 
     @app.get("/")
     def root():
