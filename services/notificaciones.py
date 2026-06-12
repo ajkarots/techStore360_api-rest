@@ -53,11 +53,16 @@ def enviar_factura_email(usuario, compra, xml_factura: str | None):
 
     server = None
     try:
-        server = smtplib.SMTP(host, int(os.getenv("SMTP_PORT", "587")))
+        server = smtplib.SMTP(host, int(os.getenv("SMTP_PORT", "587")), timeout=10)
         server.starttls()
         server.login(os.getenv("SMTP_USER"), os.getenv("SMTP_PASS"))
         server.send_message(msg)
         print(f"[Email] Factura enviada a {usuario.email}")
+    except Exception as e:
+        print(f"[Email] Error SMTP: {e}")
     finally:
         if server:
-            server.quit()  # finally: liberar el recurso SMTP siempre
+            try:
+                server.quit()
+            except Exception:
+                pass
