@@ -12,10 +12,16 @@ def enviar_alerta_sms(mensaje: str):
         return
     try:
         from twilio.rest import Client
+        twilio_from = os.getenv("TWILIO_FROM", "")
+        admin_phone = os.getenv("TWILIO_ADMIN_PHONE", "")
+        # Si el número FROM es el sandbox de WhatsApp, usar formato whatsapp:
+        if twilio_from == "+14155238886":
+            twilio_from = f"whatsapp:{twilio_from}"
+            admin_phone = f"whatsapp:{admin_phone}"
         Client(sid, token).messages.create(
             body=mensaje,
-            from_=os.getenv("TWILIO_FROM"),
-            to=os.getenv("TWILIO_ADMIN_PHONE"),
+            from_=twilio_from,
+            to=admin_phone,
         )
         print("[Twilio] Alerta enviada")
     except Exception as e:
