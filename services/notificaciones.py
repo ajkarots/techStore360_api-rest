@@ -43,13 +43,35 @@ def _cuerpo_email(usuario, compra):
     )
 
 def enviar_factura_email(usuario, compra, xml_factura: str | None):
-    brevo_key = os.getenv("BREVO_API_KEY")
-    if brevo_key:
-        _enviar_brevo_api(brevo_key, usuario, compra, xml_factura)
+    if os.getenv("N8N_EMAIL_WEBHOOK"):
+        _enviar_n8n(usuario, compra)
+    elif os.getenv("BREVO_API_KEY"):
+        _enviar_brevo_api(os.getenv("BREVO_API_KEY"), usuario, compra, xml_factura)
     elif os.getenv("SMTP_HOST"):
         _enviar_smtp(usuario, compra, xml_factura)
     else:
         print("[Email] No configurado, se omite correo")
+
+def _enviar_n8n(usuario, compra):
+    try:
+        r = _requests.post(
+            os.getenv("N8N_EMAIL_WEBHOOK"),
+            json={
+                "to":           usuario.email,
+                "nombre":       usuario.nombre,
+                "compra_id":    compra.id,
+                "subtotal":     float(compra.subtotal),
+                "iva":          float(compra.iva),
+                "total":        float(compra.total),
+                "items":        compra.items,
+                "estado":       compra.estado,
+                "clave_acceso": compra.clave_acceso,
+            },
+            timeout=10,
+        )
+        print(f"[Email] OK (n8n) - webhook status {r.status_code}")
+    except Exception as e:
+        print(f"[Email] ERROR n8n: {e}")
 
 def _enviar_brevo_api(api_key, usuario, compra, xml_factura):
     payload = {
