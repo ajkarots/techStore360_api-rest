@@ -19,7 +19,7 @@ def generar_factura_soap(id_compra: int):
         r = requests.post(
             SOAP_URL, data=envelope.encode("utf-8"),
             headers={"Content-Type": "text/xml; charset=utf-8"},
-            timeout=30,
+            timeout=60,
         )
         xml = r.text
         estado = _extraer(xml, "Estado") or "PENDIENTE"
